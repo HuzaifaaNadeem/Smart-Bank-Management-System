@@ -1,6 +1,6 @@
 # 💰 Smart Banking System – OOP Project in C++
 
-Welcome to the **Smart Banking System**, a C++ console-based application developed as part of a semester project at FAST NUCES Karachi. It simulates a real-world banking environment using advanced Object-Oriented Programming concepts — with a dash of Gen Z flair 😎.
+Welcome to the **Smart Banking System**, a C++ console-based application developed as part of a semester project at FAST NUCES Karachi. It simulates a real-world banking environment using advanced Object-Oriented Programming concepts.
 
 ---
 
