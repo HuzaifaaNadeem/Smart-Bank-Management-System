@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 using namespace std;
 
 string encrypt(string input) {
@@ -80,10 +81,9 @@ public:
 int User::userCount = 0;
 
 class Account {
-protected:
+public:
     static int nextAccNum;
 
-public:
     int accountNumber;
     double balance;
     User user;
@@ -132,6 +132,10 @@ public:
     bool loginToAccount() {
         cin.ignore();
         return user.login();
+    }
+
+    void setAccountNumber(int num) {
+        accountNumber = num;
     }
 };
 int Account::nextAccNum = 1000;
@@ -182,7 +186,6 @@ public:
             file << accounts[i]->getAccountNumber() << endl;
         }
         file.close();
-        cout << "Accounts saved to accounts.txt\n";
     }
 
     void saveUserDataToFile() const {
@@ -204,11 +207,53 @@ public:
         }
 
         file.close();
-        cout << "User data saved to userdata.txt\n";
+    }
+
+    void loadUserDataFromFile() {
+        ifstream file("userdata.txt");
+        if (!file) {
+            cout << "No previous user data found.\n";
+            return;
+        }
+
+        string line;
+        int maxAccNum = 1000;
+
+        while (getline(file, line)) {
+            stringstream ss(line);
+            string accNumStr, type, name, cnic, address, passwordEnc, balanceStr;
+
+            getline(ss, accNumStr, ',');
+            getline(ss, type, ',');
+            getline(ss, name, ',');
+            getline(ss, cnic, ',');
+            getline(ss, address, ',');
+            getline(ss, passwordEnc, ',');
+            getline(ss, balanceStr, ',');
+
+            Account* acc = nullptr;
+            if (type == "Savings") acc = new SavingsAccount();
+            else acc = new CurrentAccount();
+
+            acc->setAccountNumber(stoi(accNumStr));
+            acc->user.name = name;
+            acc->user.CNIC = cnic;
+            acc->user.address = address;
+            acc->user.passwordEncrypted = passwordEnc;
+            acc->balance = stod(balanceStr);
+
+            accounts[accountCount++] = acc;
+
+            int num = stoi(accNumStr);
+            if (num > maxAccNum) maxAccNum = num;
+        }
+
+        file.close();
+        Account::nextAccNum = maxAccNum;
     }
 
     void createNewAccount() {
-        if (accountCount >= 100) {
+        if (accountCount >= 1000) {
             cout << "Bank is full. Cannot create more accounts.\n";
             return;
         }
@@ -284,12 +329,37 @@ public:
             cout << "Account not found.\n";
         }
     }
+    
+    bool employeeLogin() const {
+    string username, password;
+    int attempts = 0;
+
+    while (attempts < 3) {
+        cout << "Enter Employee Username: ";
+        cin >> username;
+        cout << "Enter Employee Password: ";
+        cin >> password;
+
+        if (username == "admin" && password == "1234") {
+            cout << "Access Granted.\n";
+            return true;
+        } else {
+            attempts++;
+            cout << "Incorrect credentials. Attempts left: " << 3 - attempts << endl;
+        }
+    }
+
+    cout << "Employee access denied after 3 failed attempts.\n";
+    return false;
+}
+
 };
 
 int main() {
     Bank myBank;
-    int choice;
+    myBank.loadUserDataFromFile(); // Load existing data on startup
 
+    int choice;
     while (true) {
         cout << "\n========= SMART BANKING SYSTEM =========\n";
         cout << "1. Create New Account\n";
@@ -333,8 +403,11 @@ int main() {
             }
         }
         else if (choice == 5) {
-            myBank.employeeView();
+            if (myBank.employeeLogin()) {
+                myBank.employeeView();
+            }
         }
+
         else if (choice == 6) {
             cout << "Exiting... Thank you for banking with us!\n";
             break;
